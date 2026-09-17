@@ -1,215 +1,274 @@
-LangChain + LangSmith Learning Project
+# LangChain + LangSmith Learning Project
 
-This repository contains my hands-on learning work for the GenAI course, focused on building a simple application with Python, LangChain, OpenAI, and LangSmith.
+A hands-on learning project from the GenAI course, focused on building a simple LLM application with **Python, LangChain, OpenAI, and LangSmith**.
 
-The current project demonstrates how to send a prompt to an OpenAI chat model through LangChain and automatically trace the execution in LangSmith.
+The current implementation demonstrates the complete flow from environment setup to an OpenAI chat model call through LangChain, with execution tracing in LangSmith and source control through Git/GitHub.
 
-Topics Covered
+---
 
-Python Environment
+## What We Covered
 
-Python virtual environment (.venv)
+### Python & Environment
 
-Installing dependencies with pip
+- Python 3.12
+- Python virtual environment (`.venv`)
+- PowerShell-based project setup
+- Installing packages with `pip`
+- Running Python applications
 
-Running Python applications from PowerShell
+### Environment Variables & Security
 
-Keeping dependencies isolated
+- `.env` for local secrets and configuration
+- `python-dotenv` for loading environment variables
+- API keys kept outside source code
+- `.gitignore` configured to prevent `.env` and `.venv/` from being committed
 
-Environment Variables
+### OpenAI
 
-Using .env for local configuration
+- OpenAI API key setup
+- API credits and quota/billing awareness
+- `gpt-4o-mini`
+- Calling OpenAI through **LangChain**, rather than directly through the OpenAI SDK
 
-Loading variables with python-dotenv
+### LangChain
 
-Keeping API keys outside source code
+- `ChatPromptTemplate`
+- `ChatOpenAI`
+- `StrOutputParser`
+- LangChain Expression Language (LCEL)
+- Chain composition using the pipe (`|`) operator
+- `chain.invoke()`
 
-Preventing .env from being committed to GitHub
+### LangSmith
 
-OpenAI
+- LangSmith API key
+- LangSmith project configuration
+- Automatic tracing for LangChain runs
+- Reviewing prompts, model output, timing, token usage, cost information when available, and errors
+- Understanding `@traceable`
+- Understanding why `wrap_openai` is not used for this assignment
 
-Creating and configuring an OpenAI API key
+### Git & GitHub
 
-Understanding API billing/credits
+- `git init`
+- `git status`
+- `git add`
+- `git commit`
+- `git branch -M main`
+- `git remote add origin`
+- `git push`
+- GitHub repository setup and verification
 
-Using gpt-4o-mini
+---
 
-Calling OpenAI through LangChain instead of the direct OpenAI SDK
+## Project Structure
 
-LangChain
-
-ChatPromptTemplate
-
-ChatOpenAI
-
-StrOutputParser
-
-LangChain Expression Language (LCEL)
-
-Application flow:
-
-Input
-  ↓
-ChatPromptTemplate
-  ↓
-ChatOpenAI
-  ↓
-StrOutputParser
-  ↓
-Output
-
-LangSmith
-
-Creating a LangSmith API key
-
-Enabling tracing
-
-Setting a LangSmith project
-
-Tracking LangChain executions
-
-Inspecting prompts, responses, timing, tokens and other run information
-
-Git and GitHub
-
-Initializing a local Git repository
-
-Creating and connecting a GitHub repository
-
-Staging files
-
-Creating commits
-
-Renaming the branch to main
-
-Pushing to GitHub
-
-Verifying repository status
-
-Project Structure
-
+```text
 Langchain/
-├── .venv/          # Python virtual environment - not committed
+├── .venv/          # Local Python virtual environment - not committed
 ├── .env            # API keys and local configuration - not committed
-├── .gitignore      # Files excluded from Git
+├── .gitignore      # Git exclusions
 ├── main.py         # Main LangChain application
 └── README.md       # Project documentation
+```
 
-Python Environment
+---
 
-The project uses Python 3.12.
+## 1. Python Environment
 
-Create the environment:
+The project uses **Python 3.12**.
 
+Create the virtual environment:
+
+```powershell
 py -3.12 -m venv .venv
+```
 
-Activate it:
+Activate it in PowerShell:
 
+```powershell
 .\.venv\Scripts\Activate.ps1
+```
 
-Verify:
+Verify the version:
 
+```powershell
 python --version
+```
 
-Install Dependencies
+Expected:
 
+```text
+Python 3.12.x
+```
+
+---
+
+## 2. Install Dependencies
+
+```powershell
 pip install langchain langchain-openai langsmith python-dotenv
+```
 
-Package
+| Package | Purpose |
+|---|---|
+| `langchain` | Core LangChain framework |
+| `langchain-openai` | OpenAI integration for LangChain |
+| `langsmith` | Tracing and observability |
+| `python-dotenv` | Loads variables from `.env` |
 
-Purpose
+---
 
-langchain
+## 3. Environment Configuration
 
-Core LangChain framework
+Create a `.env` file in the project root:
 
-langchain-openai
-
-OpenAI integration for LangChain
-
-langsmith
-
-Tracing and observability
-
-python-dotenv
-
-Loads variables from .env
-
-Environment Configuration
-
-Create .env in the project root:
-
+```env
 OPENAI_API_KEY=your_openai_api_key
 LANGSMITH_API_KEY=your_langsmith_api_key
 LANGSMITH_TRACING=true
 LANGSMITH_PROJECT=day-8-langchain
+```
 
-Never hard-code API keys in Python or commit .env to GitHub.
+### Security rule
 
-.gitignore:
+**Never hard-code API keys in Python source code or commit `.env` to GitHub.**
 
+The project's `.gitignore` contains:
+
+```gitignore
 .venv/
 .env
 __pycache__/
 *.pyc
+```
 
-LangChain Application
+---
 
-The main application uses:
+## 4. OpenAI Configuration
 
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+The application uses:
 
-Prompt Template
+```text
+gpt-4o-mini
+```
 
+The API key is read from:
+
+```text
+OPENAI_API_KEY
+```
+
+The key is not stored in `main.py`.
+
+### Important learning point
+
+A `429` / insufficient-quota error can be a billing or available-credit problem rather than a Python, LangChain, or LangSmith code problem.
+
+During setup, an OpenAI quota issue was encountered and resolved by adding API credit.
+
+---
+
+## 5. LangChain Application Flow
+
+The application uses four main stages:
+
+```text
+User Input
+    │
+    ▼
+ChatPromptTemplate
+    │
+    ▼
+ChatOpenAI
+    │
+    ▼
+StrOutputParser
+    │
+    ▼
+Final Response
+```
+
+The complete LangChain chain is:
+
+```python
+chain = prompt | model | output_parser
+```
+
+This is **LCEL — LangChain Expression Language**.
+
+---
+
+## 6. Prompt Template
+
+The prompt is created using `ChatPromptTemplate`:
+
+```python
 prompt = ChatPromptTemplate.from_template(
     "Explain {topic} in one simple sentence."
 )
+```
 
-Model
+The `{topic}` value is supplied when the chain is invoked.
 
+---
+
+## 7. OpenAI Chat Model
+
+The OpenAI model is configured through LangChain:
+
+```python
 model = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0
 )
+```
 
-Output Parser
+The application therefore follows:
 
+```text
+Python Application
+       ↓
+    LangChain
+       ↓
+   OpenAI Model
+```
+
+Rather than directly calling the OpenAI SDK.
+
+---
+
+## 8. Output Parser
+
+`StrOutputParser` converts the model response into a normal string:
+
+```python
 output_parser = StrOutputParser()
+```
 
-LCEL Chain
+The three components are then combined:
 
+```python
 chain = prompt | model | output_parser
+```
 
-Conceptually:
+---
 
-Prompt Template
-      ↓
-OpenAI Chat Model
-      ↓
-String Output Parser
-      ↓
-Final Response
+## 9. Running the Chain
 
 The chain is executed with:
 
+```python
 response = chain.invoke({
     "topic": "LangSmith"
 })
+```
 
-Running the Application
+The result is printed to the terminal.
 
-Activate the environment:
+Example:
 
-.\.venv\Scripts\Activate.ps1
-
-Run:
-
-python main.py
-
-Example output:
-
+```text
 Sending prompt to OpenAI through LangChain...
 
 Model response:
@@ -218,244 +277,270 @@ LangSmith is a platform designed to help developers
 build, manage, and optimize language models and AI
 applications efficiently.
 --------------------------------------------------
+```
 
-LangSmith Tracing
+---
 
-The LangSmith configuration is:
+## 10. LangSmith Tracing
 
+LangSmith tracing is enabled through environment variables:
+
+```env
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=your_langsmith_api_key
 LANGSMITH_PROJECT=day-8-langchain
+```
 
-After running the application, open the day-8-langchain project in LangSmith and verify the latest run.
+No additional tracing code is required for this basic LangChain flow.
 
-The trace can provide information such as:
+After running the application, the execution can be viewed in the LangSmith project:
 
-Input
+```text
+day-8-langchain
+```
 
-Prompt
+A trace can provide information such as:
 
-Model execution
+- Input
+- Prompt
+- Model execution
+- Model output
+- Execution time
+- Token usage
+- Cost information when available
+- Errors
 
-Model output
+The complete observability flow is:
 
-Execution timing
-
-Token usage
-
-Cost information when available
-
-Errors
-
-This confirms the flow:
-
-Python Application
-       ↓
-LangChain
-       ↓
-OpenAI
-       ↓
-LangSmith Trace
-
-Why LangChain Instead of Direct OpenAI API?
-
-This assignment intentionally uses LangChain to communicate with OpenAI.
-
-Instead of:
-
-Application → OpenAI SDK → OpenAI
-
-we use:
-
+```text
 Application
-    ↓
-LangChain
-    ↓
-OpenAI
+     │
+     ▼
+  LangChain
+     │
+     ▼
+   OpenAI
+     │
+     └──────────────► LangSmith Trace
+```
 
-This provides a foundation for later topics such as prompt templates, chains, output parsers, RAG, tools, agents and model/provider abstraction.
+---
 
-LangSmith @traceable
+## 11. `@traceable` and `wrap_openai`
 
-LangSmith also provides @traceable for tracing custom Python functions. For this assignment, automatic LangChain tracing is sufficient. @traceable becomes useful when custom application logic outside the standard LangChain chain needs to be observed.
+LangSmith also supports other tracing approaches.
 
-Direct OpenAI Tracing vs LangChain Tracing
+### `@traceable`
 
-LangSmith can also trace OpenAI SDK calls using mechanisms such as wrap_openai. That approach is not used here because the assignment requires the application to use LangChain to communicate with OpenAI.
+`@traceable` can be used to trace custom Python functions. This becomes useful when application logic exists outside the standard LangChain chain.
+
+### `wrap_openai`
+
+LangSmith can also trace direct OpenAI SDK calls using `wrap_openai`.
+
+That approach is **not used in this assignment** because the requirement is to communicate with OpenAI through LangChain.
 
 Current approach:
 
+```text
 ChatPromptTemplate
         ↓
-ChatOpenAI
+   ChatOpenAI
         ↓
-StrOutputParser
+ StrOutputParser
+```
 
-Setup Issue and Lesson Learned
+---
 
-The first API execution produced an OpenAI quota/billing error (429 / insufficient quota). The important lesson was that such an error can be related to API billing or available credits rather than the Python, LangChain or LangSmith code itself.
+## 12. Why LangChain?
 
-After adding API credit, the application executed successfully.
+The assignment requires LangChain rather than a direct OpenAI SDK implementation.
 
-Security Practices
+This gives a foundation for future GenAI application patterns such as:
 
-Do
+- Prompt templates
+- Chains
+- Output parsers
+- Structured output
+- Retrieval-Augmented Generation (RAG)
+- Embeddings
+- Vector stores
+- Tool calling
+- Agents
+- Application observability
 
-Store API keys in .env
+The goal is to understand the building blocks first and introduce more advanced patterns as they become necessary.
 
-Load them through environment variables
+---
 
-Keep .env out of Git
+## 13. Git Workflow
 
-Use .gitignore
+Initialize the repository:
 
-Rotate/revoke a key if it is accidentally exposed
-
-Do Not
-
-Hard-code API keys in Python
-
-Commit .env
-
-Push API keys to GitHub
-
-Share API keys in screenshots or messages
-
-Git Workflow Used
-
-Initialize:
-
+```powershell
 git init
+```
 
 Check status:
 
+```powershell
 git status
+```
 
 Stage files:
 
-git add .gitignore main.py README.md
+```powershell
+git add .gitignore main.py
+```
 
-Commit:
+Create the first commit:
 
+```powershell
 git commit -m "Build LangChain and LangSmith example"
+```
 
-Rename branch:
+Use `main` as the branch:
 
+```powershell
 git branch -M main
+```
 
-Connect GitHub:
+Connect the GitHub repository:
 
+```powershell
 git remote add origin https://github.com/codewithari/langsmith.git
+```
 
-Push:
+Push the branch:
 
+```powershell
 git push -u origin main
+```
 
-Verify:
+Verify the working tree:
 
+```powershell
 git status
+```
 
 Expected:
 
+```text
 On branch main
 Your branch is up to date with 'origin/main'.
 
 nothing to commit, working tree clean
+```
 
-Assignment 5 Completion Checklist
+---
 
-Python environment created
+## 14. GitHub Repository
 
-Python 3.12 configured
+Repository:
 
-Required packages installed
+**codewithari/langsmith**
 
-.env configured
+The repository should contain source/documentation files such as:
 
-OpenAI API key configured
+```text
+.gitignore
+main.py
+README.md
+```
 
-LangSmith API key configured
+It should **not** contain:
 
-LangSmith tracing enabled
+```text
+.env
+.venv/
+__pycache__/
+```
 
-LangChain connected to OpenAI
+---
 
-Prompt template created
+## 15. Assignment 5 Checklist
 
-ChatOpenAI configured
+- [x] Python environment created
+- [x] Python 3.12 configured
+- [x] Required packages installed
+- [x] `.env` configured
+- [x] OpenAI API key configured
+- [x] LangSmith API key configured
+- [x] LangSmith tracing enabled
+- [x] LangChain connected to OpenAI
+- [x] Prompt template created
+- [x] `ChatOpenAI` configured
+- [x] `StrOutputParser` configured
+- [x] LCEL chain created
+- [x] Application executed successfully
+- [x] LangSmith project configured
+- [x] Git repository initialized
+- [x] GitHub repository connected
+- [x] Code committed
+- [x] Code pushed to GitHub
+- [x] `.env` excluded from Git
 
-StrOutputParser configured
+---
 
-LCEL chain created
+## 16. Learning Flow So Far
 
-Application executed successfully
+The practical learning path covered in this assignment is:
 
-LangSmith project configured
-
-Git repository initialized
-
-GitHub repository connected
-
-Code committed
-
-Code pushed to GitHub
-
-.env excluded from Git
-
-Current Learning Flow
-
+```text
 Python
-  ↓
+  │
+  ▼
 Virtual Environment
-  ↓
+  │
+  ▼
 Environment Variables
-  ↓
+  │
+  ▼
 OpenAI API
-  ↓
+  │
+  ▼
 LangChain
-  ↓
-Prompt Template
-  ↓
-Chat Model
-  ↓
-Output Parser
-  ↓
+  │
+  ├── ChatPromptTemplate
+  │
+  ├── ChatOpenAI
+  │
+  └── StrOutputParser
+  │
+  ▼
 LCEL Chain
-  ↓
+  │
+  ▼
 LangSmith Tracing
-  ↓
+  │
+  ▼
 Git
-  ↓
+  │
+  ▼
 GitHub
+```
 
-Next Learning Direction
+---
 
-Potential next topics:
+## 17. Next Learning Topics
 
-More LangChain chains
+Possible next steps after this foundation:
 
-Prompt engineering
+1. More LangChain chains
+2. Prompt engineering
+3. Structured output
+4. Document loading
+5. Text splitting
+6. Embeddings
+7. Vector stores
+8. Retrieval-Augmented Generation (RAG)
+9. Agents and tools
+10. FastAPI and Streamlit integration
+11. Local LLM integration
+12. Production-oriented GenAI application patterns
 
-Structured output
+---
 
-Document loading
+## Learning Note
 
-Text splitting
-
-Embeddings
-
-Vector stores
-
-Retrieval-Augmented Generation (RAG)
-
-Agents and tools
-
-FastAPI/Streamlit GenAI applications
-
-Local LLM integration
-
-Production-oriented GenAI application patterns
-
-Learning Note
-
-This repository is primarily a learning and experimentation project. The goal is to understand the concepts by building them practically, keeping the implementation simple first and introducing more advanced architecture only when it becomes necessary.
+This repository is primarily a **learning and experimentation project**. The implementation is intentionally simple so that the underlying GenAI concepts are clear before introducing more advanced architecture.
